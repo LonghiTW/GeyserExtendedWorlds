@@ -56,7 +56,7 @@ public class GeyserFPUser {
                     entity.getYaw(), entity.getPitch(), entity.isOnGround(), true
             );
 
-            session.setUnconfirmedTeleport(new TeleportCache(entity.position(), entity.getPitch(), entity.getYaw(), 0));
+            session.setUnconfirmedTeleport(new TeleportCache(session, entity.position(), entity.getPitch(), entity.getYaw(), 0));
         }
 
         try {
