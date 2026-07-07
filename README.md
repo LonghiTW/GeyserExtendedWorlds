@@ -23,4 +23,4 @@ Licensed under the GNU General Public License v3.0. If you distribute binaries, 
 
 - Original project: GeyserFloatingPoints by oryxel.
 - Fork and modifications: GeyserExtendedWorlds by LonghiTW, 2026.
-- License: GPLv3, see [LICENSE](LICENSE).
+- License: GPLv3, see [LICENSE](https://github.com/LonghiTW/GeyserExtendedWorlds/blob/main/LICENSE).
