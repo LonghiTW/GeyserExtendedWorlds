@@ -21,7 +21,7 @@ public class PositionCommand {
     public void register(GeyserDefineCommandsEvent event) {
         event.register(Command.builder(this.extension).source(CommandSource.class)
                 .name("position")
-                .playerOnly(true).bedrockOnly(true).permission("geyserfloatingpoints.position", TriState.TRUE)
+            .playerOnly(true).bedrockOnly(true).permission("geyserextendedworlds.position", TriState.TRUE)
                 .description("Toggle off/on title to show your real position, won't show anything if your current position is in fact real.")
                 .executor((source, cmd, args) -> {
                     if (source.connection() instanceof GeyserSession session) {

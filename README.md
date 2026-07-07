@@ -12,7 +12,7 @@ Licensed under the GNU General Public License v3.0. If you distribute binaries, 
 - Chunk and block update packets are rewritten so Bedrock sees the remapped position while the Java server still receives real coordinates.
 
 ## Commands
-- `/geyserextendedworlds position` - Toggle on/off actionbar that shows your real position. Permission: `geyserfloatingpoints.position`
+- `/geyserextendedworlds position` - Toggle on/off actionbar that shows your real position. Permission: `geyserextendedworlds.position`
 
 ## Drawbacks
 - You won't be able to see your real position since your position is always spoofed.
