@@ -7,6 +7,11 @@ plugins {
 group = "oxy.geyser.fp"
 version = "2.0"
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
 repositories {
     mavenCentral()
     maven("https://repo.opencollab.dev/main/")
@@ -17,8 +22,8 @@ dependencies {
         exclude(group = "com.google.code.gson", module = "gson")
     }
 
-    compileOnly("org.projectlombok:lombok:1.18.36")
-    annotationProcessor("org.projectlombok:lombok:1.18.36")
+    compileOnly("org.projectlombok:lombok:1.18.46")
+    annotationProcessor("org.projectlombok:lombok:1.18.46")
 
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
     implementation("org.cloudburstmc.fastutil.commons:long-common:8.5.15")
@@ -28,7 +33,7 @@ dependencies {
 
 tasks {
     shadowJar {
-        archiveFileName = "geyserfloatingpoints.jar"
+        archiveFileName = "geyserextendedworlds.jar"
 
         relocate("org.yaml.snakeyaml", "oxy.geyser.fp.shaded.snakeyaml")
         relocate("com.fasterxml", "oxy.geyser.fp.shaded.fasterxml")
@@ -40,7 +45,7 @@ modrinth {
     token = System.getenv("MODRINTH_TOKEN")
     versionName.set(version.toString() + "-" + getCommitHash())
     versionNumber.set(version.toString())
-    projectId = "geyserfloatingpoints"
+    projectId = "geyserextendedworlds"
     versionType = "release"
     uploadFile.set(tasks.getByPath("shadowJar"))
 

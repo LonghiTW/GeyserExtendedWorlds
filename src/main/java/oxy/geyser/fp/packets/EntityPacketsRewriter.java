@@ -9,6 +9,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.*;
 import oxy.geyser.fp.network.event.JavaPacketEvent;
 import oxy.geyser.fp.network.listener.JavaPacketListener;
 import oxy.geyser.fp.session.GeyserFPUser;
+import oxy.geyser.fp.world.CoordinateRemapper;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -17,11 +18,10 @@ public class EntityPacketsRewriter implements JavaPacketListener {
     @Override
     public void onReceived(GeyserFPUser user, JavaPacketEvent event) {
         if (event.getPacket() instanceof ClientboundAddEntityPacket packet) {
+            Vector3d position = CoordinateRemapper.toFakePosition(user, packet.getX(), packet.getY(), packet.getZ());
             event.setPacket(new ClientboundAddEntityPacket(
                     packet.getEntityId(), packet.getUuid(), packet.getType(), packet.getData(),
-                    packet.getX() - user.offset().getX(),
-                    packet.getY(),
-                    packet.getZ() - user.offset().getZ(),
+                    position.getX(), position.getY(), position.getZ(),
                     packet.getMovement(), packet.getYaw(), packet.getHeadYaw(), packet.getPitch()
             ));
         }
@@ -40,7 +40,7 @@ public class EntityPacketsRewriter implements JavaPacketListener {
                             list.add(new ObjectEntityMetadata<>(
                                     meta.getId(),
                                     MetadataTypes.OPTIONAL_BLOCK_POS,
-                                    Optional.of(pos.sub(user.offset()))
+                                    Optional.of(CoordinateRemapper.toFakeBlockPosition(user, pos))
                             ));
                             continue;
                         }
@@ -55,13 +55,13 @@ public class EntityPacketsRewriter implements JavaPacketListener {
 
         if (event.getPacket() instanceof ClientboundEntityPositionSyncPacket packet) {
             event.setPacket(new ClientboundEntityPositionSyncPacket(
-                    packet.getId(), packet.getPosition().sub(user.offset().toDouble()),
+                    packet.getId(), CoordinateRemapper.toFakePosition(user, packet.getPosition()),
                     packet.getDeltaMovement(), packet.getYRot(), packet.getXRot(), packet.isOnGround()
             ));
         }
 
         if (event.getPacket() instanceof ClientboundMoveVehiclePacket packet) {
-            event.setPacket(new ClientboundMoveVehiclePacket(packet.getPosition().sub(user.offset().toDouble()),
+            event.setPacket(new ClientboundMoveVehiclePacket(CoordinateRemapper.toFakePosition(user, packet.getPosition()),
                     packet.getYRot(), packet.getXRot()));
         }
     }

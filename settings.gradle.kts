@@ -1,1 +1,1 @@
-rootProject.name = "geyserfloatingpoints"
+rootProject.name = "geyserextendedworlds"

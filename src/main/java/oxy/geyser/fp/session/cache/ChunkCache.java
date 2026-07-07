@@ -19,6 +19,8 @@ import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockChangeEntr
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundLevelChunkWithLightPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSectionBlocksUpdatePacket;
 import oxy.geyser.fp.session.GeyserFPUser;
+import oxy.geyser.fp.world.ChunkRemapper;
+import oxy.geyser.fp.world.VerticalWindow;
 
 @RequiredArgsConstructor
 public class ChunkCache {
@@ -38,17 +40,14 @@ public class ChunkCache {
             ByteBuf oldByteBuf = Unpooled.wrappedBuffer(oldPacket.getChunkData());
             ByteBuf byteBuf = null;
             try {
-                for (int sectionY = 0; sectionY < this.getChunkHeightY(); sectionY++) {
+                ChunkSection[] sections = entry.getValue();
+                for (int sectionY = 0; sectionY < sections.length; sectionY++) {
                     MinecraftTypes.readChunkSection(oldByteBuf, BlockRegistries.BLOCK_STATES.get().size(),
                             user.session().getRegistryCache().registry(JavaRegistries.BIOME).size());
                 }
 
                 byteBuf = ByteBufAllocator.DEFAULT.ioBuffer();
-
-                ChunkSection[] sections = entry.getValue();
-                for (ChunkSection section : sections) {
-                    MinecraftTypes.writeChunkSection(byteBuf, section);
-                }
+                this.writeVisibleSections(byteBuf, sections);
 
                 byteBuf.writeBytes(oldByteBuf);
 
@@ -57,9 +56,12 @@ public class ChunkCache {
 
                 int x = (oldPacket.getX() << 4) - user.offset().getX();
                 int z = (oldPacket.getZ() << 4) - user.offset().getZ();
+                int yOffset = user.offset().getY();
 
                 Registries.JAVA_PACKET_TRANSLATORS.translate(ClientboundLevelChunkWithLightPacket.class,
-                        new ClientboundLevelChunkWithLightPacket(x >> 4, z >> 4, payload, oldPacket.getHeightMaps(), oldPacket.getBlockEntities(), oldPacket.getLightData()),
+                        new ClientboundLevelChunkWithLightPacket(x >> 4, z >> 4, payload,
+                                oldPacket.getHeightMaps(), ChunkRemapper.remapBlockEntities(oldPacket.getBlockEntities(), yOffset),
+                                oldPacket.getLightData()),
                         user.session(), true
                 );
             } finally {
@@ -70,6 +72,25 @@ public class ChunkCache {
                 oldByteBuf.release();
             }
         }
+    }
+
+    private void writeVisibleSections(ByteBuf byteBuf, ChunkSection[] sections) {
+        if (sections.length <= VerticalWindow.BEDROCK_SECTION_COUNT && user.offset().getY() == 0) {
+            for (ChunkSection section : sections) {
+                MinecraftTypes.writeChunkSection(byteBuf, section);
+            }
+            return;
+        }
+
+        user.geyserChunkCache().saveOnce(
+                user.session().getChunkCache().getChunkMinY() << 4,
+                user.session().getChunkCache().getChunkHeightY() << 4
+        );
+
+        user.session().getChunkCache().setMinY(VerticalWindow.BEDROCK_MIN_Y);
+        user.session().getChunkCache().setHeightY(VerticalWindow.BEDROCK_HEIGHT);
+
+        ChunkRemapper.writeVisibleSections(byteBuf, sections, this.getMinY(), user.offset().getY(), user.session());
     }
 
     public void addToCache(ClientboundLevelChunkWithLightPacket packet, ChunkSection[] chunks) {
@@ -111,6 +132,28 @@ public class ChunkCache {
         this.updateBlock(vector3i.getX(), vector3i.getY(), vector3i.getZ(), block);
     }
 
+    public int getBlock(final Vector3i vector3i) {
+        return this.getBlock(vector3i.getX(), vector3i.getY(), vector3i.getZ());
+    }
+
+    public int getBlock(int x, int y, int z) {
+        final ChunkSection[] chunk = this.getChunk(x >> 4, z >> 4);
+        if (chunk == null) {
+            return Block.JAVA_AIR_ID;
+        }
+
+        if (y < getMinY() || ((y - getMinY()) >> 4) > chunk.length - 1) {
+            return Block.JAVA_AIR_ID;
+        }
+
+        ChunkSection section = chunk[(y - getMinY()) >> 4];
+        if (section == null) {
+            return Block.JAVA_AIR_ID;
+        }
+
+        return section.getBlock(x & 0xF, y & 0xF, z & 0xF);
+    }
+
     public void updateBlock(int x, int y, int z, int block) {
         final ChunkSection[] chunk = this.getChunk(x >> 4, z >> 4);
         if (chunk == null) {
@@ -147,10 +190,16 @@ public class ChunkCache {
     }
 
     public int getMinY() {
+        if (user.worldHeight().chunkHeightY() > 0) {
+            return user.worldHeight().minY();
+        }
         return (user.session().getChunkCache().getChunkMinY() << 4);
     }
 
     public int getChunkHeightY() {
+        if (user.worldHeight().chunkHeightY() > 0) {
+            return user.worldHeight().chunkHeightY();
+        }
         return user.session().getChunkCache().getChunkHeightY();
     }
 }

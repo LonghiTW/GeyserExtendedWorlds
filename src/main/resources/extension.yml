@@ -1,6 +1,6 @@
-id: geyserfloatingpoints
-name: GeyserFloatingPoints
+id: geyserextendedworlds
+name: GeyserExtendedWorlds
 main: oxy.geyser.fp.GeyserFloatingPoints
 api: 2.10.1
 version: 2.0
-authors: [oryxel]
+authors: [oryxel, LonghiTW]

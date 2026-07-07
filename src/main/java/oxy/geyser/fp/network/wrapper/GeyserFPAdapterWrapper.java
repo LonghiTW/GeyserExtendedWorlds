@@ -33,11 +33,14 @@ public class GeyserFPAdapterWrapper extends SessionAdapter {
         for (final JavaPacketListener listener : PacketListenerRegistry.instance().javaListeners()) {
             listener.onSend(user, event);
         }
-        sendingEvent.setPacket(event.getPacket());
 
-        if (!event.isCancelled()) {
-            listeners.forEach(l -> l.packetSending(sendingEvent));
+        if (event.isCancelled()) {
+            sendingEvent.setCancelled(true);
+            return;
         }
+
+        sendingEvent.setPacket(event.getPacket());
+        listeners.forEach(l -> l.packetSending(sendingEvent));
     }
 
     @Override
