@@ -1,5 +1,7 @@
 package oxy.geyser.fp.packets;
 
+import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.util.BlockUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerAction;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundBlockDestructionPacket;
@@ -16,9 +18,15 @@ import oxy.geyser.fp.network.event.JavaPacketEvent;
 import oxy.geyser.fp.network.listener.JavaPacketListener;
 import oxy.geyser.fp.session.GeyserFPUser;
 
+import java.util.concurrent.TimeUnit;
+
 public class ActionPacketsRewriter implements JavaPacketListener {
     @Override
     public void onSend(GeyserFPUser user, JavaPacketEvent event) {
+        if (user.shouldCorrectPredictedBlockBreaks() && event.getPacket() instanceof ServerboundPlayerActionPacket packet && isDiggingAction(packet)) {
+            restorePredictedBreak(user, packet.getPosition());
+        }
+
         if (event.getPacket() instanceof ServerboundPlayerActionPacket packet) {
             event.setPacket(new ServerboundPlayerActionPacket(packet.getAction(), packet.getPosition().add(user.offset()), packet.getFace(), packet.getSequence()));
         }
@@ -65,6 +73,26 @@ public class ActionPacketsRewriter implements JavaPacketListener {
         if (event.getPacket() instanceof ServerboundSignUpdatePacket packet) {
             event.setPacket(new ServerboundSignUpdatePacket(packet.getPosition().add(user.offset()), packet.getLines(), packet.isFrontText()));
         }
+    }
+
+    private boolean isDiggingAction(ServerboundPlayerActionPacket packet) {
+        return switch (packet.getAction()) {
+            case START_DIGGING, CANCEL_DIGGING, FINISH_DIGGING -> true;
+            default -> false;
+        };
+    }
+
+    private void restorePredictedBreak(GeyserFPUser user, Vector3i position) {
+        user.session().getBlockBreakHandler().reset();
+        user.session().scheduleInEventLoop(() -> sendBlockRestore(user, position), 50, TimeUnit.MILLISECONDS);
+        user.session().scheduleInEventLoop(() -> sendBlockRestore(user, position), 150, TimeUnit.MILLISECONDS);
+        user.session().scheduleInEventLoop(() -> sendBlockRestore(user, position), 300, TimeUnit.MILLISECONDS);
+    }
+
+    private void sendBlockRestore(GeyserFPUser user, Vector3i position) {
+        BlockState state = BlockState.of(user.chunkCache().getBlock(position.add(user.offset())));
+        BlockUtils.sendBedrockStopBlockBreak(user.session(), position.toFloat());
+        BlockUtils.restoreCorrectBlock(user.session(), position, state);
     }
 
     @Override

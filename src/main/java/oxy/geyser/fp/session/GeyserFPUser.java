@@ -42,6 +42,10 @@ public class GeyserFPUser {
         return offset;
     }
 
+    public boolean shouldCorrectPredictedBlockBreaks() {
+        return !this.offset.equals(Vector3i.ZERO);
+    }
+
     public Vector3i prevPosition = Vector3i.ZERO;
 
     public void offset(Vector3i offset, boolean teleport) {

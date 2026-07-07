@@ -111,6 +111,28 @@ public class ChunkCache {
         this.updateBlock(vector3i.getX(), vector3i.getY(), vector3i.getZ(), block);
     }
 
+    public int getBlock(final Vector3i vector3i) {
+        return this.getBlock(vector3i.getX(), vector3i.getY(), vector3i.getZ());
+    }
+
+    public int getBlock(int x, int y, int z) {
+        final ChunkSection[] chunk = this.getChunk(x >> 4, z >> 4);
+        if (chunk == null) {
+            return Block.JAVA_AIR_ID;
+        }
+
+        if (y < getMinY() || ((y - getMinY()) >> 4) > chunk.length - 1) {
+            return Block.JAVA_AIR_ID;
+        }
+
+        ChunkSection section = chunk[(y - getMinY()) >> 4];
+        if (section == null) {
+            return Block.JAVA_AIR_ID;
+        }
+
+        return section.getBlock(x & 0xF, y & 0xF, z & 0xF);
+    }
+
     public void updateBlock(int x, int y, int z, int block) {
         final ChunkSection[] chunk = this.getChunk(x >> 4, z >> 4);
         if (chunk == null) {
