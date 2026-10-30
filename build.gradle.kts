@@ -39,6 +39,10 @@ tasks {
         relocate("com.fasterxml", "oxy.geyser.fp.shaded.fasterxml")
         relocate("it.unimi.dsi.fastutil", "oxy.geyser.fp.shaded.fastutil")
     }
+
+    jar {
+        archiveFileName = "geyserextendedworlds-DO-NOT-USE-only-source-no-deps.jar"
+    }
 }
 
 modrinth {
