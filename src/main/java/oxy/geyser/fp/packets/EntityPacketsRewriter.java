@@ -56,16 +56,21 @@ public class EntityPacketsRewriter implements JavaPacketListener {
 
         if (event.getPacket() instanceof ClientboundEntityPositionSyncPacket packet) {
             List<ClientboundEntityPositionSyncPacket.PositionStep> steps = null;
-            if (packet.isStepped() && packet.getSteps() != null) {
-                steps = new ArrayList<>(packet.getSteps().size());
-                for (ClientboundEntityPositionSyncPacket.PositionStep step : packet.getSteps()) {
-                    steps.add(new ClientboundEntityPositionSyncPacket.PositionStep(
-                            CoordinateRemapper.toFakePosition(user, step.position()), step.tickOffset()));
+            Vector3d endPosition = null;
+            if (packet.isStepped()) {
+                if (packet.getSteps() != null) {
+                    steps = new ArrayList<>(packet.getSteps().size());
+                    for (ClientboundEntityPositionSyncPacket.PositionStep step : packet.getSteps()) {
+                        steps.add(new ClientboundEntityPositionSyncPacket.PositionStep(
+                                CoordinateRemapper.toFakePosition(user, step.position()), step.tickOffset()));
+                    }
                 }
+            } else if (packet.getEndPosition() != null) {
+                endPosition = CoordinateRemapper.toFakePosition(user, packet.getEndPosition());
             }
             event.setPacket(new ClientboundEntityPositionSyncPacket(
-                    packet.getId(), packet.isStepped(), CoordinateRemapper.toFakePosition(user, packet.getEndPosition()),
-                    steps, packet.getYRot(), packet.getXRot(), packet.isOnGround()
+                    packet.getId(), packet.isStepped(), endPosition, steps,
+                    packet.getYRot(), packet.getXRot(), packet.isOnGround()
             ));
         }
 
