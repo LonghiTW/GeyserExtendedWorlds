@@ -41,7 +41,7 @@ tasks {
     }
 
     jar {
-        archiveFileName = "geyserextendedworlds-DO-NOT-USE-only-source-no-deps.jar"
+        archiveFileName = "geyserextendedworlds-DO-NOT-USE-no-deps.jar"
     }
 }
 
