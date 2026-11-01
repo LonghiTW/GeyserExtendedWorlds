@@ -189,6 +189,11 @@ public class ChunkCache {
         this.chunkPackets.remove(chunkPosition);
     }
 
+    public void clear() {
+        this.chunks.clear();
+        this.chunkPackets.clear();
+    }
+
     public int getMinY() {
         if (user.worldHeight().chunkHeightY() > 0) {
             return user.worldHeight().minY();

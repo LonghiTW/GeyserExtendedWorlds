@@ -26,5 +26,7 @@ public class GeyserChunkCacheState {
 
         session.getChunkCache().setMinY(this.originalMinY);
         session.getChunkCache().setHeightY(this.originalHeightY);
+        this.originalMinY = Integer.MIN_VALUE;
+        this.originalHeightY = 0;
     }
 }

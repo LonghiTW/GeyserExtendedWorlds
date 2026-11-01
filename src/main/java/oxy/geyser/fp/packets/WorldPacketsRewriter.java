@@ -25,6 +25,7 @@ public class WorldPacketsRewriter implements JavaPacketListener {
                 || event.getPacket() instanceof ClientboundLoginPacket) {
             user.geyserChunkCache().restore(user.session());
             user.resetWorldHeight();
+            user.chunkCache().clear();
         }
 
         if (event.getPacket() instanceof ClientboundSetBorderCenterPacket packet) {
