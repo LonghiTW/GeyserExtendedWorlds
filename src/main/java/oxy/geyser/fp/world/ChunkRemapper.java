@@ -5,9 +5,9 @@ import io.netty.buffer.Unpooled;
 import org.cloudburstmc.nbt.NbtMap;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.registry.BlockRegistries;
+import org.geysermc.geyser.registry.java.JavaRegistries;
+import org.geysermc.geyser.registry.java.JavaRegistry;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.session.cache.registry.JavaRegistries;
-import org.geysermc.geyser.session.cache.registry.JavaRegistry;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.DataPalette;
@@ -70,7 +70,7 @@ public final class ChunkRemapper {
         try {
             for (int sectionY = 0; sectionY < sectionCount; sectionY++) {
                 sections[sectionY] = MinecraftTypes.readChunkSection(byteBuf, BlockRegistries.BLOCK_STATES.get().size(),
-                        session.getRegistryCache().registry(JavaRegistries.BIOME).size());
+                        session.javaRegistries().registry(JavaRegistries.BIOME).size());
             }
         } finally {
             byteBuf.release();
@@ -82,8 +82,8 @@ public final class ChunkRemapper {
         int sourceStartSection = VerticalWindow.sourceStartSection(worldMinY, offsetY);
 
         final int blockStateCount = BlockRegistries.BLOCK_STATES.get().size();
-        final JavaRegistry<Integer> biomeRegistry = session.getRegistryCache().registry(JavaRegistries.BIOME);
-        final int biomeId = biomeRegistry.values().getFirst();
+        final JavaRegistry<Integer> biomeRegistry = session.javaRegistries().registry(JavaRegistries.BIOME);
+        final int biomeId = biomeRegistry.getOrThrow(0);
         final int biomeCount = biomeRegistry.size();
 
         for (int i = 0; i < VerticalWindow.BEDROCK_SECTION_COUNT; i++) {

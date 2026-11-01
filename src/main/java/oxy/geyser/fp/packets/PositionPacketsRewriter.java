@@ -7,6 +7,7 @@ import org.cloudburstmc.protocol.bedrock.packet.SetTitlePacket;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PositionElement;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundAcceptTeleportationPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundMoveVehiclePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosRotPacket;
@@ -58,6 +59,18 @@ public class PositionPacketsRewriter implements JavaPacketListener {
             event.setPacket(new ServerboundMoveVehiclePacket(
                     CoordinateRemapper.toRealPosition(user, position.getX(), position.getY(), position.getZ()),
                     packet.getYRot(), packet.getXRot(), packet.isOnGround()));
+        }
+
+        // Geyser's acceptTeleport echoes back the position it received from the Java
+        // server. For a re-offset teleport that position is the rewritten (fake)
+        // position; sending it back makes the server reject/misapply the confirmation
+        // (and re-sends the teleport, freezing the player). Rewrite the confirmation
+        // with the REAL position so the server accepts the teleport.
+        if (event.getPacket() instanceof ServerboundAcceptTeleportationPacket packet) {
+            Vector3d realPosition = CoordinateRemapper.toRealPosition(user, packet.getX(), packet.getY(), packet.getZ());
+            event.setPacket(new ServerboundAcceptTeleportationPacket(
+                    packet.getId(), realPosition.getX(), realPosition.getY(), realPosition.getZ(),
+                    packet.getYRot(), packet.getXRot()));
         }
     }
 

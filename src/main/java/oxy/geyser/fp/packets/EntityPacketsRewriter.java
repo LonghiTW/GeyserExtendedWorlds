@@ -12,6 +12,7 @@ import oxy.geyser.fp.session.GeyserFPUser;
 import oxy.geyser.fp.world.CoordinateRemapper;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class EntityPacketsRewriter implements JavaPacketListener {
@@ -54,9 +55,22 @@ public class EntityPacketsRewriter implements JavaPacketListener {
         }
 
         if (event.getPacket() instanceof ClientboundEntityPositionSyncPacket packet) {
+            List<ClientboundEntityPositionSyncPacket.PositionStep> steps = null;
+            Vector3d endPosition = null;
+            if (packet.isStepped()) {
+                if (packet.getSteps() != null) {
+                    steps = new ArrayList<>(packet.getSteps().size());
+                    for (ClientboundEntityPositionSyncPacket.PositionStep step : packet.getSteps()) {
+                        steps.add(new ClientboundEntityPositionSyncPacket.PositionStep(
+                                CoordinateRemapper.toFakePosition(user, step.position()), step.tickOffset()));
+                    }
+                }
+            } else if (packet.getEndPosition() != null) {
+                endPosition = CoordinateRemapper.toFakePosition(user, packet.getEndPosition());
+            }
             event.setPacket(new ClientboundEntityPositionSyncPacket(
-                    packet.getId(), CoordinateRemapper.toFakePosition(user, packet.getPosition()),
-                    packet.getDeltaMovement(), packet.getYRot(), packet.getXRot(), packet.isOnGround()
+                    packet.getId(), packet.isStepped(), endPosition, steps,
+                    packet.getYRot(), packet.getXRot(), packet.isOnGround()
             ));
         }
 
